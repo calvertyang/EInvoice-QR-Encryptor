@@ -1,0 +1,15 @@
+AllCops:
+  TargetRubyVersion: 2.1
+  Exclude:
+    - tmp/*.rb
+Metrics:
+  Enabled: false
+Lint/UnusedMethodArgument:
+  Description: 'Checks for unused method arguments.'
+  Enabled: false
+Style/AsciiComments:
+  Description: 'Use only ascii symbols in comments.'
+  Enabled: false
+Style/FileName:
+  Description: 'Use snake_case for source file names.'
+  Enabled: false
