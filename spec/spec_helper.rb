@@ -1,4 +1,5 @@
 require 'bundler/setup'
+require 'simplecov'
 require 'einvoice-qr-encryptor'
 
 RSpec.configure do |config|
