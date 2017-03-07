@@ -1,8 +1,11 @@
-# EInvoiceQREncryptor
+[![Gem Version](https://badge.fury.io/rb/einvoice-qr-encryptor.svg)](http://badge.fury.io/rb/einvoice-qr-encryptor)
+[![Build Status](https://travis-ci.org/CalvertYang/EInvoice-QR-Encryptor.svg?branch=master)](https://travis-ci.org/CalvertYang/EInvoice-QR-Encryptor)
+![Analytics](https://ga-beacon.appspot.com/UA-44933497-3/CalvertYang/EInvoice-QR-Encryptor?pixel)
+# EInvoice-QR-Encryptor
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/einvoice-qr-encryptor`. To experiment with that code, run `bin/console` for an interactive prompt.
+Encrypt, decrypt and generate QR code information for einvoice(Taiwan)
 
-TODO: Delete this and the text above, and describe your gem
+_Compatible with 2D barcode specification version 1.6_
 
 ## Installation
 
@@ -14,15 +17,55 @@ gem 'einvoice-qr-encryptor'
 
 And then execute:
 
-    $ bundle
+```bash
+bundle
+```
 
 Or install it yourself as:
 
-    $ gem install einvoice-qr-encryptor
+```bash
+gem install einvoice-qr-encryptor
+```
 
 ## Usage
 
-TODO: Write usage instructions here
+```ruby
+cipher = EInvoiceQREncryptor::Cipher.new('FE0F50D87215F625D1248F5FDAEBA37F')
+```
+
+#### Encrypt plain text
+
+```ruby
+cipher.encrypt('AA123456781234')
+#=> '73UqXrAk5DsVNv2VEvIFkQ=='
+```
+
+#### Decrypt cipher text
+
+```ruby
+cipher.decrypt('73UqXrAk5DsVNv2VEvIFkQ==')
+#=> 'AA123456781234'
+```
+
+#### Generate QR Code information for invoice
+
+```ruby
+cipher.gen_qrcode_information(
+  invoice_number: 'AA12345678',
+  invoice_date: '1040511',
+  invoice_time: '090000',
+  random_number: '1234',
+  sales_amount: 100,
+  tax_amount: 0,
+  total_amount: 100,
+  buyer_identifier: '00000000',
+  represent_identifier: '00000000',
+  seller_identifier: '00000000',
+  business_identifier: '00000000',
+  product_array: []
+)
+#=> 'AA12345678104051112340000006400000064000000000000000073UqXrAk5DsVNv2VEvIFkQ=='
+```
 
 ## Development
 
@@ -32,7 +75,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/CalvertYang/einvoice-qr-encryptor. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
+Bug reports and pull requests are welcome on GitHub at https://github.com/CalvertYang/EInvoice-QR-Encryptor. This project is intended to be a safe, welcoming space for collaboration, and contributors are expected to adhere to the [Contributor Covenant](http://contributor-covenant.org) code of conduct.
 
 
 ## License
