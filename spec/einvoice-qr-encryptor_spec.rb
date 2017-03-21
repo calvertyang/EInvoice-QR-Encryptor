@@ -626,6 +626,32 @@ RSpec.describe EInvoiceQREncryptor do
       end.to raise_error RuntimeError, 'The product_array.product_qty cannot be empty'
     end
 
+    it 'can validate format of product_array.product_qty' do
+      expect do
+        @cipher.gen_qrcode_information(
+          invoice_number: 'AA12345678',
+          invoice_date: '1040511',
+          invoice_time: '090000',
+          random_number: '1234',
+          sales_amount: 100,
+          tax_amount: 0,
+          total_amount: 100,
+          buyer_identifier: '00000000',
+          represent_identifier: '00000000',
+          seller_identifier: '00000000',
+          business_identifier: '00000000',
+          product_array: [{
+            product_code: '4713546575609',
+            product_name: '商品名稱',
+            product_qty: 'abc',
+            product_sale_amount: '100',
+            product_tax_amount: '0',
+            product_amount: '100'
+          }]
+        )
+      end.to raise_error RuntimeError, 'The product_array.product_qty should be number string'
+    end
+
     it 'can validate type of product_array.product_sale_amount' do
       expect do
         @cipher.gen_qrcode_information(
@@ -676,6 +702,32 @@ RSpec.describe EInvoiceQREncryptor do
           }]
         )
       end.to raise_error RuntimeError, 'The product_array.product_sale_amount cannot be empty'
+    end
+
+    it 'can validate format of product_array.product_sale_amount' do
+      expect do
+        @cipher.gen_qrcode_information(
+          invoice_number: 'AA12345678',
+          invoice_date: '1040511',
+          invoice_time: '090000',
+          random_number: '1234',
+          sales_amount: 100,
+          tax_amount: 0,
+          total_amount: 100,
+          buyer_identifier: '00000000',
+          represent_identifier: '00000000',
+          seller_identifier: '00000000',
+          business_identifier: '00000000',
+          product_array: [{
+            product_code: '4713546575609',
+            product_name: '商品名稱',
+            product_qty: '1',
+            product_sale_amount: 'abc',
+            product_tax_amount: '0',
+            product_amount: '100'
+          }]
+        )
+      end.to raise_error RuntimeError, 'The product_array.product_sale_amount should be number string'
     end
 
     it 'can validate type of product_array.product_tax_amount' do
@@ -730,6 +782,32 @@ RSpec.describe EInvoiceQREncryptor do
       end.to raise_error RuntimeError, 'The product_array.product_tax_amount cannot be empty'
     end
 
+    it 'can validate format of product_array.product_tax_amount' do
+      expect do
+        @cipher.gen_qrcode_information(
+          invoice_number: 'AA12345678',
+          invoice_date: '1040511',
+          invoice_time: '090000',
+          random_number: '1234',
+          sales_amount: 100,
+          tax_amount: 0,
+          total_amount: 100,
+          buyer_identifier: '00000000',
+          represent_identifier: '00000000',
+          seller_identifier: '00000000',
+          business_identifier: '00000000',
+          product_array: [{
+            product_code: '4713546575609',
+            product_name: '商品名稱',
+            product_qty: '1',
+            product_sale_amount: '100',
+            product_tax_amount: 'abc',
+            product_amount: '100'
+          }]
+        )
+      end.to raise_error RuntimeError, 'The product_array.product_tax_amount should be number string'
+    end
+
     it 'can validate type of product_array.product_amount' do
       expect do
         @cipher.gen_qrcode_information(
@@ -782,7 +860,33 @@ RSpec.describe EInvoiceQREncryptor do
       end.to raise_error RuntimeError, 'The product_array.product_amount cannot be empty'
     end
 
-    it 'can generate QR code information for invoice' do
+    it 'can validate format of product_array.product_amount' do
+      expect do
+        @cipher.gen_qrcode_information(
+          invoice_number: 'AA12345678',
+          invoice_date: '1040511',
+          invoice_time: '090000',
+          random_number: '1234',
+          sales_amount: 100,
+          tax_amount: 0,
+          total_amount: 100,
+          buyer_identifier: '00000000',
+          represent_identifier: '00000000',
+          seller_identifier: '00000000',
+          business_identifier: '00000000',
+          product_array: [{
+            product_code: '4713546575609',
+            product_name: '商品名稱',
+            product_qty: '1',
+            product_sale_amount: '100',
+            product_tax_amount: '0',
+            product_amount: 'abc'
+          }]
+        )
+      end.to raise_error RuntimeError, 'The product_array.product_amount should be number string'
+    end
+
+    it 'can generate QR code information for EInvoice' do
       expect(
         @cipher.gen_qrcode_information(
           invoice_number: 'AA12345678',
@@ -799,6 +903,43 @@ RSpec.describe EInvoiceQREncryptor do
           product_array: []
         )
       ).to eq 'AA12345678104051112340000006400000064000000000000000073UqXrAk5DsVNv2VEvIFkQ=='
+    end
+
+    it 'can generate Barcode and QR code information for EInvoice' do
+      expect(
+        @cipher.gen_barcode_qrcode_information(
+          invoice_number: 'AA12345678',
+          invoice_date: '1040511',
+          invoice_time: '090000',
+          random_number: '1234',
+          sales_amount: 100,
+          tax_amount: 0,
+          total_amount: 100,
+          buyer_identifier: '00000000',
+          represent_identifier: '00000000',
+          seller_identifier: '00000000',
+          business_identifier: '00000000',
+          product_array: [{
+            product_code: '4713546575601',
+            product_name: 'Product 1',
+            product_qty: '1',
+            product_sale_amount: '60',
+            product_tax_amount: '0',
+            product_amount: '60'
+          }, {
+            product_code: '4713546575602',
+            product_name: 'Product 2',
+            product_qty: '2',
+            product_sale_amount: '20',
+            product_tax_amount: '0',
+            product_amount: '20'
+          }]
+        )
+      ).to eq(
+        barcode: '10405AA123456781234',
+        qrcode_left: 'AA12345678104051112340000006400000064000000000000000073UqXrAk5DsVNv2VEvIFkQ==:**********:0:2:1',
+        qrcode_right: '**'
+      )
     end
   end
 end

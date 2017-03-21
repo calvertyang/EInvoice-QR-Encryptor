@@ -2,6 +2,7 @@ require 'openssl'
 require 'base64'
 require 'einvoice-qr-encryptor/error_message'
 require 'einvoice-qr-encryptor/core_ext/integer'
+require 'einvoice-qr-encryptor/core_ext/string'
 
 module EInvoiceQREncryptor
   class Cipher # :nodoc:
@@ -35,7 +36,7 @@ module EInvoiceQREncryptor
       @cipher.update(Base64.decode64(cipher_text)) + @cipher.final
     end
 
-    # Generate QR code information for invoice
+    # Generate QR code information for EInvoice
     #
     # @param invoice_number [String]
     # @param invoice_date [String]
@@ -49,7 +50,7 @@ module EInvoiceQREncryptor
     # @param seller_identifier [String]
     # @param business_identifier [String]
     # @param product_arrays [Array]
-    # @return [String] QR code information for invoice
+    # @return [String] QR code information for EInvoice
     # @example
     #   gen_qrcode_information(
     #     invoice_number: 'AA12345678',
@@ -75,7 +76,7 @@ module EInvoiceQREncryptor
       raise ErrorMessage.generate(msg: :field_should_be, field: :invoice_date, data: String) unless invoice_date.is_a? String
       raise ErrorMessage.generate(msg: :fixed_length, field: :invoice_date, length: 7) if invoice_date.length != 7
 
-      /\d{3}(?<month>\d{2})(?<day>\d{2})/ =~ invoice_date
+      /\A\d{3}(?<month>\d{2})(?<day>\d{2})\Z/ =~ invoice_date
       raise ErrorMessage.generate(msg: :field_should_be, field: 'month of invoice_date', data: 'between 01 ~ 12') unless ('01'..'12').cover? month
       raise ErrorMessage.generate(msg: :field_should_be, field: 'day of invoice_date', data: 'between 01 ~ 31') unless ('01'..'31').cover? day
 
@@ -93,11 +94,11 @@ module EInvoiceQREncryptor
 
       # 稅額
       raise ErrorMessage.generate(msg: :field_should_be, field: :tax_amount, data: Integer) unless tax_amount.is_a? Integer
-      raise ErrorMessage.generate(msg: :field_should_be, field: :tax_amount, data: 'greater than or equal to 0') if tax_amount. < 0
+      raise ErrorMessage.generate(msg: :field_should_be, field: :tax_amount, data: 'greater than or equal to 0') if tax_amount < 0
 
       # 總計金額(含稅)
       raise ErrorMessage.generate(msg: :field_should_be, field: :total_amount, data: Integer) unless total_amount.is_a? Integer
-      raise ErrorMessage.generate(msg: :field_should_be, field: :total_amount, data: 'greater than or equal to 0') if total_amount. < 0
+      raise ErrorMessage.generate(msg: :field_should_be, field: :total_amount, data: 'greater than or equal to 0') if total_amount < 0
 
       # 買受人統一編號
       raise ErrorMessage.generate(msg: :field_should_be, field: :buyer_identifier, data: String) unless buyer_identifier.is_a? String
@@ -130,27 +131,115 @@ module EInvoiceQREncryptor
         # 商品數量
         raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_qty', data: String) unless product[:product_qty].is_a? String
         raise ErrorMessage.generate(msg: :cannot_be_empty, field: 'product_array.product_qty') if product[:product_qty].empty?
+        raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_qty', data: 'number string') unless product[:product_qty].numeric?
 
         # 商品銷售額(整數未稅)，若無法分離稅項則記載為字串 0
         raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_sale_amount', data: String) unless product[:product_sale_amount].is_a? String
         raise ErrorMessage.generate(msg: :cannot_be_empty, field: 'product_array.product_sale_amount') if product[:product_sale_amount].empty?
+        raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_sale_amount', data: 'number string') unless product[:product_sale_amount].numeric?
 
         # 商品稅額(整數)，若無法分離稅項則記載為字串 0
         raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_tax_amount', data: String) unless product[:product_tax_amount].is_a? String
         raise ErrorMessage.generate(msg: :cannot_be_empty, field: 'product_array.product_tax_amount') if product[:product_tax_amount].empty?
+        raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_tax_amount', data: 'number string') unless product[:product_tax_amount].numeric?
 
         # 商品金額(整數含稅)
         raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_amount', data: String) unless product[:product_amount].is_a? String
         raise ErrorMessage.generate(msg: :cannot_be_empty, field: 'product_array.product_amount') if product[:product_amount].empty?
+        raise ErrorMessage.generate(msg: :field_should_be, field: 'product_array.product_amount', data: 'number string') unless product[:product_amount].numeric?
       end
 
       # generate cipher text
       cipher_text = encrypt("#{invoice_number}#{random_number}")
 
-      # return QR Code invoice information
+      # return QR Code information for EInvoice
       "#{invoice_number}#{invoice_date}#{random_number}" \
       "#{sales_amount.to_8bit_hex_string}#{total_amount.to_8bit_hex_string}" \
       "#{buyer_identifier}#{seller_identifier}#{cipher_text}"
+    end
+
+    # Generate Barcode and QR code information for EInvoice
+    #
+    # @param invoice_number [String]
+    # @param invoice_date [String]
+    # @param invoice_time [String]
+    # @param random_number [String]
+    # @param sales_amount [Integer]
+    # @param tax_amount [Integer]
+    # @param total_amount [Integer]
+    # @param buyer_identifier [String]
+    # @param represent_identifier [String]
+    # @param seller_identifier [String]
+    # @param business_identifier [String]
+    # @param product_arrays [Array]
+    # @return [Hash] Barcode and QR code information for EInvoice
+    # @example
+    #   gen_barcode_qrcode_information(
+    #     invoice_number: 'AA12345678',
+    #     invoice_date: '1040511',
+    #     invoice_time: '090000',
+    #     random_number: '1234',
+    #     sales_amount: 100,
+    #     tax_amount: 0,
+    #     total_amount: 100,
+    #     buyer_identifier: '00000000',
+    #     represent_identifier: '00000000',
+    #     seller_identifier: '00000000',
+    #     business_identifier: '00000000',
+    #     product_array: [{
+    #       product_code: '4713546575601',
+    #       product_name: 'Product 1',
+    #       product_qty: '1',
+    #       product_sale_amount: '60',
+    #       product_tax_amount: '0',
+    #       product_amount: '60'
+    #     }, {
+    #       product_code: '4713546575602',
+    #       product_name: 'Product 2',
+    #       product_qty: '2',
+    #       product_sale_amount: '20',
+    #       product_tax_amount: '0',
+    #       product_amount: '20'
+    #     }]
+    #   )
+    #=> {
+    #     :barcode=>"10405AA123456781234",
+    #     :qrcode_left=>"AA12345678104051112340000006400000064000000000000000073UqXrAk5DsVNv2VEvIFkQ==:**********:0:2:1",
+    #     :qrcode_right=>"**"
+    #   }
+    def gen_barcode_qrcode_information(invoice_number:, invoice_date:, invoice_time:, random_number:, sales_amount:, tax_amount:, total_amount:, buyer_identifier:, represent_identifier:, seller_identifier:, business_identifier:, product_array:)
+      first_77_bits_qrcode_info = gen_qrcode_information(
+        invoice_number: invoice_number,
+        invoice_date: invoice_date,
+        invoice_time: invoice_time,
+        random_number: random_number,
+        sales_amount: sales_amount,
+        tax_amount: tax_amount,
+        total_amount: total_amount,
+        buyer_identifier: buyer_identifier,
+        represent_identifier: represent_identifier,
+        seller_identifier: seller_identifier,
+        business_identifier: business_identifier,
+        product_array: product_array
+      )
+
+      # 營業人自行使用區
+      bussiness_custom_block = '*' * 10
+
+      # 二維條碼記載完整品目筆數
+      product_count_in_qrcode = 0
+
+      # 該張發票交易品目總筆數
+      product_count_in_einvoice = product_array.length
+
+      # 中文編碼參數
+      chinese_encoding = 1
+
+      {
+        barcode: "#{invoice_date[0..4]}#{invoice_number}#{random_number}",
+        qrcode_left: "#{first_77_bits_qrcode_info}:#{bussiness_custom_block}:#{product_count_in_qrcode}:#{product_count_in_einvoice}:#{chinese_encoding}",
+        qrcode_right: '**'
+      }
     end
 
     private
